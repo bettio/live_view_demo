@@ -18,6 +18,11 @@ defmodule PhoenixChatWeb.MessageBoxLive do
       nick: "user#{random_id}"
     }
 
+    types = %{text: :string}
+    initial_message =
+      {%{}, types}
+      |> Ecto.Changeset.cast(%{text: ""}, Map.keys(types))
+
     socket =
       socket
       |> assign(messages: [])
@@ -26,7 +31,7 @@ defmodule PhoenixChatWeb.MessageBoxLive do
       |> assign(chan_topic: "")
       |> assign(chan_users: [])
       |> assign(joined_chans: [])
-      |> assign(input_reset_id: UUID.uuid1())
+      |> assign(user_message: initial_message)
 
     {:ok, socket}
   end
@@ -74,18 +79,22 @@ defmodule PhoenixChatWeb.MessageBoxLive do
     |> handle_command(socket)
   end
 
-  def handle_event("enter_message", %{"code" => "Enter", "value" => text} = _event, socket) do
+  def handle_event("enter_message", %{"form_params" => form_params} = _event, socket) do
     %{
       chan: chan,
       user: user
     } = socket.assigns
 
-    Message.new(user, chan, text)
-    |> Chat.send_message()
+    types = %{text: :string}
+    user_message_changeset =
+      {%{}, types}
+      |> Ecto.Changeset.cast(form_params, Map.keys(types))
 
-    socket =
-      socket
-      |> assign(input_reset_id: UUID.uuid1())
+    {:ok, user_message} =
+      Ecto.Changeset.apply_action(user_message_changeset, :insert)
+
+    Message.new(user, chan, user_message.text)
+      |> Chat.send_message()
 
     {:noreply, socket}
   end
