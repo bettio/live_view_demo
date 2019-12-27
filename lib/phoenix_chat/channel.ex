@@ -45,17 +45,17 @@ defmodule PhoenixChat.Channel do
 
   @impl true
   def handle_call(:get_topic, _from, %State{topic: topic} = state) do
-    {:reply, topic, state}
+    {:reply, {:ok, topic}, state}
   end
 
   @impl true
   def handle_call(:get_users, _from, %State{users: users} = state) do
-    {:reply, users, state}
+    {:reply, {:ok, users}, state}
   end
 
   @impl true
   def handle_call(:get_backlog, _from, %State{backlog: backlog} = state) do
-    {:reply, backlog, state}
+    {:reply, {:ok, backlog}, state}
   end
 
   @impl true
